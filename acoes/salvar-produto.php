@@ -2,19 +2,32 @@
 
 require_once __DIR__ . '/../config/conexao.php';
 
-// Este arquivo recebe o envio do formulario.
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: ../index.php?pagina=produtos');
     exit;
 }
 
+$idInformado = trim((string) ($_POST['id'] ?? ''));
+$id = null;
+
+if ($idInformado !== '') {
+    $id = filter_var(
+        $idInformado,
+        FILTER_VALIDATE_INT,
+        ['options' => ['min_range' => 1]]
+    );
+
+    if ($id === false) {
+        header('Location: ../index.php?pagina=produtos&erro=1');
+        exit;
+    }
+}
+
 $nome = trim((string) ($_POST['nome'] ?? ''));
 $descricao = trim((string) ($_POST['descricao'] ?? ''));
 $pesoInformado = str_replace(',', '.', (string) ($_POST['peso'] ?? ''));
-
 $peso = filter_var($pesoInformado, FILTER_VALIDATE_FLOAT);
 
-// Confere os dados antes de salvar.
 if (
     $nome === '' ||
     mb_strlen($nome, 'UTF-8') > 100 ||
@@ -28,18 +41,37 @@ if (
     exit;
 }
 
+$dados = [
+    ':nome' => $nome,
+    ':descricao' => $descricao,
+    ':peso' => number_format($peso, 2, '.', '')
+];
+
 try {
-    // Os valores sao enviados separadamente do comando SQL.
-    $sql = 'INSERT INTO produtos (nome, descricao, peso)
-            VALUES (:nome, :descricao, :peso)';
+    if ($id !== null) {
+        // Confere se o produto ainda existe.
+        $consulta = $pdo->prepare('SELECT id FROM produtos WHERE id = ?');
+        $consulta->execute([$id]);
+
+        if (!$consulta->fetch()) {
+            header('Location: ../index.php?pagina=produtos&erro=1');
+            exit;
+        }
+
+        // Atualiza o produto selecionado.
+        $sql = 'UPDATE produtos
+                SET nome = :nome, descricao = :descricao, peso = :peso
+                WHERE id = :id';
+
+        $dados[':id'] = $id;
+    } else {
+        // Cadastra um novo produto.
+        $sql = 'INSERT INTO produtos (nome, descricao, peso)
+                VALUES (:nome, :descricao, :peso)';
+    }
 
     $comando = $pdo->prepare($sql);
-
-    $comando->execute([
-        ':nome' => $nome,
-        ':descricao' => $descricao,
-        ':peso' => number_format($peso, 2, '.', '')
-    ]);
+    $comando->execute($dados);
 } catch (PDOException $erro) {
     error_log($erro->getMessage());
 
@@ -47,6 +79,5 @@ try {
     exit;
 }
 
-// Volta para a listagem depois de cadastrar.
 header('Location: ../index.php?pagina=produtos&sucesso=1');
 exit;

@@ -2,7 +2,23 @@
 
 require_once __DIR__ . '/../config/conexao.php';
 
-// Busca os produtos cadastrados no banco.
+// Protege os textos exibidos no HTML.
+$escapar = function ($texto) {
+    return htmlspecialchars((string) $texto, ENT_QUOTES, 'UTF-8');
+};
+
+$produtoEditar = null;
+
+// Busca o produto selecionado para edicao.
+$idEditar = filter_input(INPUT_GET, 'editar', FILTER_VALIDATE_INT);
+
+if ($idEditar && $idEditar > 0) {
+    $consulta = $pdo->prepare('SELECT * FROM produtos WHERE id = ?');
+    $consulta->execute([$idEditar]);
+    $produtoEditar = $consulta->fetch() ?: null;
+}
+
+// Busca a lista de produtos.
 $consulta = $pdo->query('SELECT * FROM produtos ORDER BY id DESC');
 $produtos = $consulta->fetchAll();
 ?>
@@ -13,29 +29,46 @@ $produtos = $consulta->fetchAll();
 
 <?php if (isset($_GET['sucesso'])): ?>
     <div class="alert alert-success">
-        Produto cadastrado com sucesso!
+        Produto salvo com sucesso!
     </div>
 <?php endif; ?>
 
 <?php if (isset($_GET['erro'])): ?>
     <div class="alert alert-danger">
-        Não foi possível cadastrar. Informe um nome de até
-        100 caracteres e um peso válido maior que zero.
+        Não foi possível salvar. Confira os dados informados.
+    </div>
+<?php endif; ?>
+
+<?php if (isset($_GET['editar']) && !$produtoEditar): ?>
+    <div class="alert alert-warning">
+        Produto não encontrado. Selecione um produto na tabela.
     </div>
 <?php endif; ?>
 
 <section class="card mt-4">
     <div class="card-body">
-        <h2 class="h5 mb-3">Novo produto</h2>
+        <h2 class="h5 mb-3">
+            <?php echo $produtoEditar ? 'Editar produto' : 'Novo produto'; ?>
+        </h2>
 
         <form action="acoes/salvar-produto.php" method="post">
+            <input
+                type="hidden"
+                name="id"
+                value="<?php echo $escapar($produtoEditar['id'] ?? ''); ?>"
+            >
+
             <div class="row g-3">
                 <div class="col-md-2">
                     <label for="id" class="form-label">ID</label>
                     <input
                         id="id"
                         class="form-control"
-                        value="Gerado ao salvar"
+                        value="<?php
+                            echo $escapar(
+                                $produtoEditar['id'] ?? 'Gerado ao salvar'
+                            );
+                        ?>"
                         disabled
                     >
                 </div>
@@ -48,6 +81,9 @@ $produtos = $consulta->fetchAll();
                         name="nome"
                         class="form-control"
                         maxlength="100"
+                        value="<?php
+                            echo $escapar($produtoEditar['nome'] ?? '');
+                        ?>"
                         required
                     >
                 </div>
@@ -64,6 +100,9 @@ $produtos = $consulta->fetchAll();
                         min="0.01"
                         max="99999999.99"
                         step="0.01"
+                        value="<?php
+                            echo $escapar($produtoEditar['peso'] ?? '');
+                        ?>"
                         required
                     >
                 </div>
@@ -78,17 +117,36 @@ $produtos = $consulta->fetchAll();
                         class="form-control"
                         rows="3"
                         maxlength="2000"
-                    ></textarea>
+                    ><?php
+                        echo $escapar($produtoEditar['descricao'] ?? '');
+                    ?></textarea>
                 </div>
             </div>
 
             <div class="mt-3">
                 <button type="submit" class="btn btn-primary">
-                    Salvar produto
+                    <?php
+                        echo $produtoEditar
+                            ? 'Salvar alterações'
+                            : 'Salvar produto';
+                    ?>
                 </button>
-                <button type="reset" class="btn btn-outline-secondary">
-                    Limpar
-                </button>
+
+                <?php if ($produtoEditar): ?>
+                    <a
+                        href="index.php?pagina=produtos"
+                        class="btn btn-outline-secondary"
+                    >
+                        Cancelar
+                    </a>
+                <?php else: ?>
+                    <button
+                        type="reset"
+                        class="btn btn-outline-secondary"
+                    >
+                        Limpar
+                    </button>
+                <?php endif; ?>
             </div>
 
             <p class="text-secondary small mt-3 mb-0">
@@ -97,6 +155,7 @@ $produtos = $consulta->fetchAll();
         </form>
     </div>
 </section>
+
 <section class="card mt-4">
     <div class="card-body">
         <h2 class="h5 mb-3">Produtos cadastrados</h2>
@@ -113,13 +172,13 @@ $produtos = $consulta->fetchAll();
                         <th>Nome</th>
                         <th>Descrição</th>
                         <th>Peso (kg)</th>
+                        <th>Ação</th>
                     </tr>
                 </thead>
-
                 <tbody>
                     <?php if (empty($produtos)): ?>
                         <tr>
-                            <td colspan="4" class="text-center text-secondary py-4">
+                            <td colspan="5" class="text-center text-secondary">
                                 Nenhum produto cadastrado.
                             </td>
                         </tr>
@@ -127,36 +186,27 @@ $produtos = $consulta->fetchAll();
                         <?php foreach ($produtos as $produto): ?>
                             <tr>
                                 <td><?php echo (int) $produto['id']; ?></td>
-
+                                <td><?php echo $escapar($produto['nome']); ?></td>
+                                <td><?php echo $escapar($produto['descricao']); ?></td>
                                 <td>
                                     <?php
-                                    echo htmlspecialchars(
-                                        $produto['nome'],
-                                        ENT_QUOTES,
-                                        'UTF-8'
-                                    );
+                                        echo number_format(
+                                            (float) $produto['peso'],
+                                            2,
+                                            ',',
+                                            '.'
+                                        );
                                     ?>
                                 </td>
-
                                 <td>
-                                    <?php
-                                    echo htmlspecialchars(
-                                        $produto['descricao'] ?? '',
-                                        ENT_QUOTES,
-                                        'UTF-8'
-                                    );
-                                    ?>
-                                </td>
-
-                                <td>
-                                    <?php
-                                    echo number_format(
-                                        (float) $produto['peso'],
-                                        2,
-                                        ',',
-                                        '.'
-                                    );
-                                    ?>
+                                    <a
+                                        href="index.php?pagina=produtos&editar=<?php
+                                            echo (int) $produto['id'];
+                                        ?>"
+                                        class="btn btn-outline-primary btn-sm"
+                                    >
+                                        Editar
+                                    </a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
