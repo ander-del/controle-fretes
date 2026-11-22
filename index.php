@@ -137,6 +137,10 @@ $titulo = $paginas[$pagina];
 
     <?php require __DIR__ . '/paginas/fretes.php'; ?>
 
+<?php elseif ($pagina === 'relatorios'): ?>
+
+    <?php require __DIR__ . '/paginas/relatorios.php'; ?>
+
 <?php else: ?>
                         <div class="alert alert-info mt-4">
                             Esta seção será implementada nas próximas etapas.
