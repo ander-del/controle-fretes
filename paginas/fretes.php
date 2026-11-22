@@ -5,6 +5,11 @@ require_once __DIR__ . '/../config/conexao.php';
 $escapar = function ($texto) {
     return htmlspecialchars((string) $texto, ENT_QUOTES, 'UTF-8');
 };
+// Quando um frete for selecionado, mostra somente seus detalhes.
+if (isset($_GET['detalhe'])) {
+    require __DIR__ . '/detalhes-frete.php';
+    return;
+}
 
 $produtos = $pdo->query(
     'SELECT id, nome, peso FROM produtos ORDER BY nome'
@@ -275,3 +280,95 @@ $cadastrosProntos =
 <script src="assets/fretes.js"></script>
 
 <?php endif; ?>
+<?php
+$consulta = $pdo->query(
+    'SELECT
+        f.id,
+        f.data,
+        f.valor,
+        t.nome AS transportador,
+        origem.identificacao AS origem,
+        destino.identificacao AS destino
+     FROM fretes f
+     JOIN transportadores t ON t.id = f.transportador_id
+     JOIN enderecos origem ON origem.id = f.origem_id
+     JOIN enderecos destino ON destino.id = f.destino_id
+     ORDER BY f.id DESC'
+);
+
+$fretes = $consulta->fetchAll();
+?>
+
+<section class="card mt-4">
+    <div class="card-body">
+        <h2 class="h5">Fretes cadastrados</h2>
+
+        <p class="text-secondary small">
+            Total: <?php echo count($fretes); ?> frete(s).
+        </p>
+
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Data</th>
+                        <th>Transportador</th>
+                        <th>Origem</th>
+                        <th>Destino</th>
+                        <th>Valor</th>
+                        <th>Ação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (empty($fretes)): ?>
+                        <tr>
+                            <td colspan="7" class="text-center text-secondary">
+                                Nenhum frete cadastrado.
+                            </td>
+                        </tr>
+                    <?php else: ?>
+                        <?php foreach ($fretes as $frete): ?>
+                            <tr>
+                                <td><?php echo (int) $frete['id']; ?></td>
+                                <td>
+                                    <?php
+                                        echo date(
+                                            'd/m/Y',
+                                            strtotime($frete['data'])
+                                        );
+                                    ?>
+                                </td>
+                                <td>
+                                    <?php echo $escapar($frete['transportador']); ?>
+                                </td>
+                                <td><?php echo $escapar($frete['origem']); ?></td>
+                                <td><?php echo $escapar($frete['destino']); ?></td>
+                                <td class="text-nowrap">
+                                    R$ <?php
+                                        echo number_format(
+                                            (float) $frete['valor'],
+                                            2,
+                                            ',',
+                                            '.'
+                                        );
+                                    ?>
+                                </td>
+                                <td>
+                                    <a
+                                        href="index.php?pagina=fretes&detalhe=<?php
+                                            echo (int) $frete['id'];
+                                        ?>"
+                                        class="btn btn-outline-primary btn-sm"
+                                    >
+                                        Ver detalhes
+                                    </a>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
