@@ -21,3 +21,11 @@ CREATE TABLE IF NOT EXISTS enderecos (
     cidade VARCHAR(100) NOT NULL,
     uf CHAR(2) NOT NULL
 );
+CREATE TABLE IF NOT EXISTS transportadores (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(150) NOT NULL,
+    documento VARCHAR(18) NOT NULL,
+    telefone VARCHAR(20) NOT NULL,
+    email VARCHAR(150),
+    placa VARCHAR(8) NOT NULL
+);
