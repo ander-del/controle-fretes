@@ -123,9 +123,13 @@ $titulo = $paginas[$pagina];
                 </div>
                  <?php elseif ($pagina === 'produtos'): ?>
 
-                    <?php require __DIR__ . '/paginas/produtos.php'; ?>
+    <?php require __DIR__ . '/paginas/produtos.php'; ?>
 
-                 <?php else: ?>
+<?php elseif ($pagina === 'enderecos'): ?>
+
+    <?php require __DIR__ . '/paginas/enderecos.php'; ?>
+
+<?php else: ?>
                         <div class="alert alert-info mt-4">
                             Esta seção será implementada nas próximas etapas.
                         </div>
