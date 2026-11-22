@@ -121,11 +121,15 @@ $titulo = $paginas[$pagina];
                         Abrir relatórios
                     </a>
                 </div>
-            <?php else: ?>
-                <div class="alert alert-info mt-4">
-                    Esta seção será implementada nas próximas etapas.
-                </div>
-            <?php endif; ?>
+                 <?php elseif ($pagina === 'produtos'): ?>
+
+                    <?php require __DIR__ . '/paginas/produtos.php'; ?>
+
+                 <?php else: ?>
+                        <div class="alert alert-info mt-4">
+                            Esta seção será implementada nas próximas etapas.
+                        </div>
+                 <?php endif; ?>
         </main>
     </div>
 </body>
