@@ -1,0 +1,73 @@
+body {
+    margin: 0;
+    background: #f4f6f9;
+    color: #212529;
+    font-family: Arial, sans-serif;
+}
+
+.sidebar {
+    width: 230px;
+    position: fixed;
+    inset: 0 auto 0 0;
+    background: white;
+    border-right: 1px solid #dee2e6;
+    padding: 24px 16px;
+    overflow-y: auto;
+}
+
+.sidebar .nav-link {
+    color: #495057;
+    margin-bottom: 6px;
+    padding: 10px 14px;
+    border-radius: 6px;
+}
+
+.sidebar .nav-link:hover {
+    background: #eef4ff;
+}
+
+.sidebar .nav-link.active {
+    background: #0d6efd;
+    color: white;
+}
+
+.conteudo {
+    margin-left: 230px;
+    min-height: 100vh;
+}
+
+.cabecalho {
+    background: white;
+    border-bottom: 1px solid #dee2e6;
+    padding: 20px 32px;
+}
+
+.area-principal {
+    padding: 32px;
+}
+
+.boas-vindas {
+    background: #e7f0ff;
+    border: 1px solid #cfe2ff;
+    border-radius: 8px;
+    padding: 28px;
+}
+
+.card {
+    border-color: #e2e6ea;
+}
+
+@media (max-width: 767px) {
+    .sidebar {
+        position: static;
+        width: 100%;
+    }
+
+    .conteudo {
+        margin-left: 0;
+    }
+
+    .area-principal {
+        padding: 20px;
+    }
+}
